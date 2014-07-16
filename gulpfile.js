@@ -4,6 +4,7 @@
 var gulp = require('gulp');
 var browserSync = require('browser-sync');
 var reload = browserSync.reload;
+var gutil = require('gulp-util');
 
 // load plugins
 var $ = require('gulp-load-plugins')();
@@ -20,11 +21,22 @@ gulp.task('styles', function () {
         .pipe(reload({stream:true}));
 });
 
+gulp.task('coffee', function() {
+  gulp.src('app/scripts/coffee/**/*.coffee')
+    .pipe($.coffee({bare: true}).on('error', gutil.log))
+    .pipe(gulp.dest('app/scripts'))
+    .pipe($.jshint())
+        .pipe($.jshint.reporter(require('jshint-stylish')))
+        .pipe($.size())
+        .pipe(reload({stream:true}));
+});
+
 gulp.task('scripts', function () {
     return gulp.src('app/scripts/**/*.js')
         .pipe($.jshint())
         .pipe($.jshint.reporter(require('jshint-stylish')))
-        .pipe($.size());
+        .pipe($.size())
+        .pipe(reload({stream:true}));
 });
 
 gulp.task('html', ['styles', 'scripts'], function () {
@@ -111,7 +123,7 @@ gulp.task('wiredep', function () {
         .pipe(gulp.dest('app'));
 });
 
-gulp.task('watch', ['browser-sync','styles','scripts'], function () {
+gulp.task('watch', ['browser-sync','styles','coffee','scripts'], function () {
     //var server = $.livereload();
     var server = reload();
 
@@ -120,6 +132,7 @@ gulp.task('watch', ['browser-sync','styles','scripts'], function () {
     gulp.watch([
         'app/*.html',
         '.tmp/styles/**/*.css',
+        'app/scripts/coffee/**/*.coffee',
         'app/scripts/**/*.js',
         'app/images/**/*'
     ], reload).on('change', function () {
@@ -127,6 +140,7 @@ gulp.task('watch', ['browser-sync','styles','scripts'], function () {
     });
 
     gulp.watch('app/styles/**/*.scss', ['styles']);
+    gulp.watch('app/scripts/coffee/**/*.coffee', ['coffee']);
     gulp.watch('app/scripts/**/*.js', ['scripts']);
     gulp.watch('app/images/**/*', ['images']);
     gulp.watch('bower.json', ['wiredep']);
